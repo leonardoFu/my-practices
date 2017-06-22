@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>顶部进度条css练习</title>
+	<style media="screen">
+		body{
+			margin:0;
+			padding:0;
+			overflow-y: scroll;
+		}
+		#content{
+			height:2000px;
+		}
+
+		#progress{
+			position:fixed;
+			background: green;
+			height:5px;
+			box-shadow: 1px 1px 1px green;
+			width:10px;
+		}
+	</style>
+</head>
+<body>
+	<div id="content">
+			<div id="progress">
+			</div>
+
+	</div>
+	<script type="text/javascript">
+	var content = document.getElementById('content');
+	var progress = document.getElementById('progress');
+
+	window.onscroll = function(){
+		var scrollTop = document.body.scrollTop;
+		var height = content.offsetHeight;
+		var contentWidth = content.offsetWidth;
+		var progressWidth = (scrollTop/height)*contentWidth;
+		progress.style.width = progressWidth+"px";
+	}
+	</script>
+</body>
+</html>

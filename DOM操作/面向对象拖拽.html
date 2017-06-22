@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>testDrag</title>
+	<style>
+		#box{position: absolute;width: 200px;height: 200px;background: red;}
+	</style>
+</head>
+<body>
+	<div id="box"></div>
+	<script type = "text/javascript">
+    window.onload = function() {
+        var drag = new Drag('box');
+
+        drag.init();
+    };
+
+    /**
+     * 拖拽对象的构造方法
+     * @param {String} id DOM元素的id
+     */
+    function Drag(id) {
+        this.obj = document.getElementById(id);
+        this.disX = 0;
+        this.disY = 0;
+    }
+
+    Drag.prototype.init = function() {
+        // this指针
+        var me = this;
+
+        this.obj.onmousedown = function(e) {
+            var e = e || event;
+            me.mouseDown(e);
+
+            // 阻止默认事件
+            return false;
+        };
+    };
+
+    Drag.prototype.mouseDown = function(e) {
+        // this指针
+        var me = this;
+        this.disX = e.clientX - this.obj.offsetLeft;
+        this.disY = e.clientY - this.obj.offsetTop;
+
+        document.onmousemove = function(e) {
+            var e = e || window.event;
+
+            me.mouseMove(e);
+        };
+
+        document.onmouseup = function() {
+            me.mouseUp();
+        }
+    };
+
+    Drag.prototype.mouseMove = function(e) {
+        this.obj.style.left = (e.clientX - this.disX) + 'px';
+        this.obj.style.top = (e.clientY - this.disY) + 'px';
+    };
+
+    Drag.prototype.mouseUp = function() {
+        document.onmousemove = null;
+        document.onmouseup = null;
+    };
+	</script>
+</body>
+</html>
