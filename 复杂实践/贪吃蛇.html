@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>面向对象的贪吃蛇</title>
+	<style>
+		
+		html{
+			font-size: 62.5%;
+		}
+		#app{
+			position: absolute;
+			display: flex;
+			top: 0;
+			right: 0;
+			left: 0;
+			bottom: 0;
+			background: #000;
+			overflow: hidden;
+		}
+		.left{
+			flex: 6;
+			height: 100%;
+			border-right: 1px solid #454545;
+		}
+		.right{
+			flex: 1;
+			height: 100%;
+			background: #222;
+		}
+		.gamepane{
+			position:relative;
+			/*display: inline-block;*/
+			border: 1px solid #ccc;
+			width: 850px;
+			height:850px;
+			margin: 3% auto;
+			vertical-align: middle;
+		}
+		#game{
+			width: 100%;
+			height: 100%;
+		}
+		td{
+			border: none;
+		}
+		.snake{
+			background: green;
+		}
+		.food{
+			background: red;
+		}
+		.food-special{
+			background: orange;
+		}
+		#recorder{
+			position: relative;
+			height: 50%;
+			/*line-height: 300px;*/
+			padding-top: 30%;
+			box-sizing: border-box;
+			font-size: 3rem;
+			text-align: center;
+			color: white;
+		}
+		#highest-score{
+			display: block;
+			margin-bottom: 20px;
+		}
+		#score{
+			display: block;
+
+		}
+		#operators{
+			height: 50%;
+			padding-top: 50px;
+			text-align: center;
+		}
+		.operator{
+			display: block;
+			position: relative;
+			height: 80px;
+			width: 80px;
+			line-height: 80px;
+			margin: 10px auto;
+			border-radius: 50%;
+			background: green;
+			color: white;
+			font-size: 2em;
+			text-decoration: none;
+			transition: .3s all ease;
+		}
+
+		.operator .disabled {
+
+		}
+		.operator:hover{
+			transform: scale(1.2, 1.2);
+		}
+		
+		.operator-reset{
+			background: #FF7F24;
+		}
+		.operator-pause{
+			background: #8B2500;
+		}
+		.operator-start{
+			background: #8B8970;
+		}
+		@media screen and (min-width: 768px) and (max-width: 1440px){
+			.gamepane{
+				width: 700px;
+				height: 700px;
+			}
+			#recorder{
+				font-size: 2.5rem;
+			}
+		}
+		@media screen and (max-width: 768px){
+			.gamepane{
+				width: 700px;
+				height: 700px;
+			}
+			#app{
+				flex-direction: column;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div id = "app">
+		<div class = "left">
+			<div class = "gamepane">
+				<table id = "game">
+					
+				</table>
+			</div>
+		</div>
+		<div class="right">
+			<div id = "recorder">
+				<span id = "highest-score">
+					最高分：0
+				</span>
+				<span id = "score">
+					得分：0
+				</span>
+			</div>
+			<div id = "operators">
+				<a class = "operator operator-reset" href="#">重置</a>
+				<a class = "operator operator-pause" href="#">暂停</a>
+				<a class = "operator operator-start" href="#">开始</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+
+	/**
+	 * 这次练习应用到的知识点：
+	 * javascript:
+	 * 	1.面向对象
+	 * 	2.单例模式
+	 * 	3.Math对象的 abs、round和random
+	 * 	4.js 初始/移除 事件监听，键盘事件
+	 * 	5.Object.defineProperty
+	 * 	6.闭包与立即执行函数
+	 * 	7.链式调用的实现
+	 * 	8.递归
+	 * 	9.Array对象的几种api及其返回值
+	 * 	10.event.preventDefault()
+	 * 	11.定时器回调中的 this
+	 * 	12.localStorage的运用
+	 * css:	
+	 * 	1.flex布局
+	 * 	2.rem
+	 * 	3.媒体查询
+	 */
+	var game = function(){
+		var SIZE = 100;
+		MAX_FOOD = 5,
+		DEFAULT_SNAKE_LENGTH = 6, //初始时刻蛇的长度
+		SPEED = 100,
+		KEY_LEFT = 37,
+		KEY_UP = 38,
+		KEY_RIGHT = 39,
+		KEY_DOWN = 40,
+		DIRECTION = {
+			left: 0,
+			up: 1,
+			right: 2,
+			down: 3
+		};
+
+
+		var score = 0;
+		/**
+		 * 封装一些常用的dom操作/选择
+		 * @type {Object}
+		 */
+		var DOMUtils = {
+			getById: function(id){
+				return document.getElementById(id);
+			},
+			getByTag: function(tagName){
+				return document.getElementsByTagName(tagName);
+			},
+			getByClass: function(className){
+				return document.getElementsByClassName(className);
+			},
+			getByDataId: function(dataId){
+				var queryStr = 'td[data-id ="'+dataId+'" ]';
+				return document.querySelector(queryStr);
+			},
+		}
+
+		var utils = {
+			throttle: function(delay, action){
+			  var last = 0
+			  return function(){
+			    var curr = new Date()
+			    if (curr - last > delay){
+			      action.apply(this, arguments)
+			      last = curr 
+			    }
+			  }
+			},
+			debounce: function(delay, action){
+			  var last
+			  return function(){
+			    var _this = this, args = arguments
+			    clearTimeout(last)
+			    last = setTimeout(function(){
+			        action.apply(_this, args)
+			    }, delay)
+			  }
+			}
+		}
+		/**
+		 * 界面生成器，生成 SIZE * SIZE 大小的游戏桌面
+		 * @type {Object}
+		 */
+		var frame = {
+			el: DOMUtils.getById('game'),
+
+			init: function(size){
+
+				//在向DOM拼接大量节点的时候，一定要用fragment的方式，一次性拼接
+				//操作js对象的开销远低于操作DOM
+				var grid = document.createDocumentFragment('');
+
+				for(var i = 0; i < size; i++){
+					var row = document.createElement('tr');
+
+					for(var j = 0; j < size; j++){
+						var col = document.createElement('td');
+						col.setAttribute('data-id', j+'-'+i);
+						row.appendChild(col);
+					}
+
+					grid.appendChild(row);
+				}
+				this.el.appendChild(grid);
+			},
+			clear: function(){
+				this.el.innerHTML = '';
+				return this;
+			}
+		}
+
+		/**
+		 * 位置对象的构造方法
+		 * @param {Number} x X轴坐标
+		 * @param {Number} y Y轴坐标
+		 */
+		var Position = function(x, y){
+			this.posX = x;
+			this.posY = y;
+
+			this.el = DOMUtils.getByDataId(x+'-'+y);
+
+			this.equals = function(anoPos){
+				if(!anoPos){
+					return false;
+				}
+				return this.posX === anoPos.posX && this.posY === anoPos.posY; 
+			}
+			this.clear = function (){
+				this.el.className = '';
+			}
+			this.initSnakePos = function (){
+				var classArr = this.el.className ? this.el.className.split(' ') : [];
+				var index = classArr.indexOf('food');
+
+				if(index >= 0){
+					classArr.splice(index, 1);
+				}
+
+				this.el.className = classArr.concat('snake').join(' ');
+				return this;
+			}
+			this.initFoodPos = function(special){
+				var classArr = this.el.className ? this.el.className.split(' ') : [];
+				var indexOfSnake = classArr.indexOf('snake');
+				var indexOfFood = classArr.indexOf('food');
+
+				if(indexOfSnake >= 0 || indexOfFood >= 0 ){
+					return false;
+				}
+
+				var classStr = special ? 'food-special' : 'food';
+				this.el.className = classArr.concat(classStr).join(' ');
+
+				return this;
+
+			}
+		}
+
+		/**
+		 * 食物的构造方法
+		 * 食物包含一个 位置对象 和本身的分值
+		 * @param {Boolean} special 是否特殊食物
+		 */
+		var Food = function (special){
+			this.score = special ? 7 : 3;
+
+			function initPos(){
+				var tempPosX = Math.round(Math.random() * SIZE);
+				var tempPosY = Math.round(Math.random() * SIZE);
+
+				//根据初始化的条件生成新的食物位置
+				var newPos = new Position(tempPosX, tempPosY).initFoodPos(special);
+				//如果新的位置已经被蛇/食物占用了，就递归继续创建，保证创建成功；
+				return newPos || initPos();
+			}
+
+			this.pos = initPos();
+		}
+
+		/**
+		 * 食物列表的构造方法，类似于一个食物的控制器
+		 * @param {Number} max 最大的食物个数
+		 */
+		var FoodList = function(max){
+
+			this.foods = [];
+
+			this.init = function(){
+
+				while(this.foods.length < 5){
+					this.createFood();
+				}
+				return this;
+			}
+
+			this.clear = function(){
+				this.foods = [];
+				return this;
+			}
+
+			this.createFood = function(){
+				//有30%的机会生成特殊食物
+				var isSpecial = Math.random() > 0.7;
+				this.foods.push(new Food(isSpecial));
+			}
+
+			this.checkEaten = function(snakeHead){
+
+				return this.foods.filter(function(food){
+					return food.pos.equals(snakeHead);
+				}).length;
+
+			}
+
+			this.eaten = function(position){
+				var eatenFood, index;
+				eatenFood = this.foods.map((food, idx) => {
+					var pos = food.pos;
+					if(pos.equals(position)){
+						//被吃掉的食物所在位置
+						index = idx;
+						return food;
+					}
+				})[0]
+
+				if (!eatenFood && index === undefined) {
+					throw '异常：食物位置获取失败！';
+					return;
+				}
+
+				//再创建一个食物
+				while(this.foods.length - 1 < MAX_FOOD){
+					this.createFood();
+				}
+
+				//从食物列表中删除这个位置,并返回被删除的食物
+				return this.foods.splice(index, 1)[0];
+
+			}
+		}
+
+		
+		/**
+		 * 蛇的构造方法，一般而言蛇以单例存在
+		 */
+		var Snake = function(){
+			this.bodyList = [];
+			this.direction = DIRECTION.right;
+		}
+
+		Snake.prototype = {
+			getHead: function(){
+				return this.bodyList[this.bodyList.length -1];
+			},
+			init: function(){
+				function getHead(){
+					var tempPosX = Math.round(Math.random() * Math.round(SIZE / 2) + Math.round(SIZE / 4));
+					var tempPosY = Math.round(Math.random() * Math.round(SIZE / 2) + Math.round(SIZE / 4));
+
+					return {
+						x: tempPosX,
+						y: tempPosY
+					}
+				}
+				var headPos = getHead();
+
+				while(this.bodyList.length < DEFAULT_SNAKE_LENGTH){
+					this.bodyList.push(new Position(headPos.x, headPos.y).initSnakePos());
+
+					headPos.x++;
+				}
+			},
+			clear: function(){
+				this.bodyList = [];
+				this.direction = DIRECTION.right;
+				return this;
+			},
+			forward: function(){
+				var head = this.getHead();
+				var x = head.posX,
+						y = head.posY;
+
+				switch(this.direction){
+
+					case DIRECTION.left:
+						x--;
+						break;
+					case DIRECTION.right:
+						x++;
+						break;
+					case DIRECTION.up:
+						y--;
+						break;
+					case DIRECTION.down:
+						y++;
+						break;
+					default:
+						break;
+
+				}
+
+				var newHead = new Position(x,y).initSnakePos();
+				this.bodyList.push(newHead);
+
+				return newHead;
+			},
+			removeTail: function(){
+				var tail = this.bodyList.shift();
+				tail.clear();
+			},
+			changeDir: utils.throttle(101,function(newDir){
+				this.direction = newDir;
+			})
+		}
+
+		var Game = function(){
+			var snake,
+			 foodList,
+			 		timer,
+			recorder = { 
+				scoreEl: DOMUtils.getById('score'), 
+				highestScoreEl: DOMUtils.getById('highest-score') 
+			};
+
+			//通过set和get方法，封装了对DOM的操作
+			Object.defineProperty(recorder, 'score', {
+				set: function(newVal){
+					recorder.scoreEl.innerText = '得分：'+ newVal;
+				},
+				get: function(){
+					return Number.parseInt(recorder.scoreEl.innerText.split('：')[1]);
+				},
+  			enumerable: true,
+  			configurable: true
+			})
+
+			Object.defineProperty(recorder, 'highestScore', {
+				set: function(newVal){
+					recorder.highestScoreEl.innerText = '最高分：'+ newVal;
+				},
+				get: function(){
+					return window.localStorage.getItem('score') || 0;
+				},
+  			enumerable: true,
+  			configurable: true
+			})
+
+			this.getSnake = function(){
+				if(!snake){
+					snake = new Snake(); 
+				}
+				return snake;
+			}
+
+			this.getFoodList = function(){
+
+				if(!foodList){
+					foodList = new FoodList(); 
+				}
+
+				return foodList;
+			}
+
+			this.getTimer = function(){
+					return timer;
+				}
+			this.setTimer = function(newTimer){
+				timer = newTimer;
+			}
+			this.checkOver = function(){
+				var flag;
+
+				function eatSelf(fullSnake){
+					var head = fullSnake.slice(-1)[0];
+					var body = fullSnake.slice(0, -1);
+
+					var exists =  body.filter(function(pos){
+						return pos.equals(head);
+					}).length;
+
+					return exists;
+
+				}
+				
+				var snakeHead = this.getSnake().getHead();
+
+				if (snakeHead.posX > SIZE -1 || snakeHead.posY > SIZE -1) {
+					flag = true;
+				} else if (eatSelf(this.getSnake().bodyList)){
+					flag = true;
+				}
+				return flag ;
+			}
+
+			function canChangeDir(direction){
+					if(direction === game.getSnake().direction){
+						game.process();
+						return;
+					}
+					return Math.abs(direction - game.getSnake().direction) !== 2;
+				}
+
+			function handleKeyDown(event){
+					var snake = game.getSnake();
+					event = event || window.event;
+					if(!event){
+						return;
+					}
+					switch(event.keyCode){
+						case KEY_UP:
+							if(canChangeDir(DIRECTION.up)){
+								snake.changeDir(DIRECTION.up)
+							}
+							break;
+						case KEY_DOWN:
+							if(canChangeDir(DIRECTION.down)){
+								snake.changeDir(DIRECTION.down);
+							}
+							break;
+						case KEY_LEFT:
+							if(canChangeDir(DIRECTION.left)){
+								snake.changeDir(DIRECTION.left);
+							} ;
+							break;
+						case KEY_RIGHT:
+							if(canChangeDir(DIRECTION.right)) {
+								snake.changeDir(DIRECTION.right);
+							};
+							break;
+						default:
+							return;
+					}
+			}
+
+			function handleStart(e){
+					e = e || window.event;
+					e.preventDefault();
+
+					game.start();
+			}
+			function handleReset(e){
+					e = e || window.event;
+					e.preventDefault();
+
+					game.reset();
+			}
+			function handlePause(e){
+					e = e || window.event;
+					e.preventDefault();
+
+					game.pause();
+			}
+
+			this.removeListeners = function(){
+
+				DOMUtils.getByClass('operator-start')[0].removeEventListener('click', handleStart);
+				DOMUtils.getByClass('operator-pause')[0].removeEventListener('click', handlePause);
+				DOMUtils.getByClass('operator-reset')[0].removeEventListener('click', handleReset);
+
+				document.removeEventListener('keydown', handleKeyDown);
+			}
+
+			this.addListeners = function(){
+
+				DOMUtils.getByClass('operator-start')[0].addEventListener('click', handleStart);
+				DOMUtils.getByClass('operator-pause')[0].addEventListener('click', handlePause);
+				DOMUtils.getByClass('operator-reset')[0].addEventListener('click', handleReset);
+
+				document.addEventListener('keydown', handleKeyDown);
+			}
+
+			this.reset = function(){
+				this.removeListeners();
+				this.init();
+			}
+
+			/**
+			 * 初始化游戏的各类元素，但不开启定时器
+			 */
+			this.init = function(){
+				var _this = this;
+
+				recorder.highestScore = recorder.highestScore;
+				frame.clear().init(SIZE);
+				clearInterval(this.getTimer());
+				var snake = this.getSnake().clear().init();
+				var foodList = this.getFoodList().clear().init();
+				recorder.score = 0;
+
+				this.addListeners();
+
+			}
+
+
+			this.over = function(){
+
+				this.pause();
+
+				alert('游戏结束！');
+
+				//判断当前得分是否最高分，如果是，就记录下来
+				if(recorder.highestScore < recorder.score){
+					window.localStorage.setItem('score', recorder.score);
+				}
+			}
+
+			this.start = function(){
+				
+				var _this = this;
+				this.setTimer(setInterval(function(){
+						_this.process();
+				}, SPEED));
+
+			}
+
+			this.process = function(){
+					try{
+
+							var head = snake.forward();
+
+						}catch(e){
+
+							this.over();
+
+						}
+
+						if (foodList.checkEaten(head)) {
+
+							var eatenFood = foodList.eaten(head);
+							recorder.score = recorder.score || 0;
+							recorder.score += eatenFood.score;
+
+							if(eatenFood.score === 7){
+								MAX_FOOD ++;
+							}
+						} else if(this.checkOver()) {
+
+							this.over();
+
+						} else {
+
+							snake.removeTail();
+
+						}
+			}
+
+			this.pause = function(){
+
+				clearInterval(this.getTimer());
+
+			}
+			this.resume = this.start;
+		}
+
+		return new Game();
+		
+	}()
+		
+	window.onload = function(){
+
+		game.init();
+		
+	}
+	</script>
+</body>
+</html>
