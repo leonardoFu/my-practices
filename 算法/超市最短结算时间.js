@@ -12,4 +12,5 @@ function queueTime(customers, n) {
 	})
 	return Math.max.apply(this, queue);
 }
+
 console.log(queueTime([1, 2, 3, 4, 5], 3))
