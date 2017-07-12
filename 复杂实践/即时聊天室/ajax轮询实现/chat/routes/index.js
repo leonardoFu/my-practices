@@ -1,9 +1,12 @@
 var express = require('express');
 var router = express.Router();
 
-function Result(msg, code) {
+
+var MAX_MSG_LENGTH = 100;
+function Result(msg, code, data) {
 	this.message = msg || '';
 	this.status_code = code || 0;
+	this.data = data || null;
 }
 
 Result.prototype = {
@@ -18,7 +21,15 @@ Result.prototype = {
 	setMsg: function(msg) {
 		this.message = msg
 		return this;
+	},
+	setData: function(data){
+		this.data = data;
 	}
+}
+
+function Message(username, text){
+	this.username = username;
+	this.text = text;
 }
 
 /* GET home page. */
@@ -31,6 +42,7 @@ router.get('/chat', function(req, res) {
 });
 
 var msgList = [];
+var msgCount = 0;
 var userList = [];
 var userCount = 0;
 
@@ -38,13 +50,29 @@ router.post('/login', function(req, res) {
 	var name = req.body.name,
 	  result = new Result();
 
-	if (userList.indexOf(name) >= 0) {
-		return res.json(result.failed().setMsg('该用户名已登录'));
-	} else {
+	// if (userList.indexOf(name) >= 0) {
+	// 	return res.json(result.failed().setMsg('该用户名已登录'));
+	// } else {
 		userList.push(name);
 		userCount++;
 		return res.json(result.success());
+	// }
+});
+router.post('/message', function(req, res){
+	var name = req.body.name,
+	    text = req.body.text;
+	this.msgList.push(new Message(name, text));
+	msgCount++;
+	if(this.msgList.length > MAX_MSG_LENGTH){
+		this.msgList.length.splice(0, 30);
+		msgCount = this.msgList.length;
 	}
+
+	res.json(new Result().success());
+}):
+
+router.get('/count', function(req, res){
+	res.json(new Result().success().setData(msgCount));
 });
 
 router.post('/logout', function(req, res){
