@@ -24,12 +24,14 @@ Result.prototype = {
 	},
 	setData: function(data){
 		this.data = data;
+		return this;
 	}
 }
 
-function Message(username, text){
+function Message(username, text, seq){
 	this.username = username;
 	this.text = text;
+	this.seq = seq;
 }
 
 /* GET home page. */
@@ -45,35 +47,50 @@ var msgList = [];
 var msgCount = 0;
 var userList = [];
 var userCount = 0;
+var msgSeq = 0;
 
 router.post('/login', function(req, res) {
 	var name = req.body.name,
 	  result = new Result();
 
-	// if (userList.indexOf(name) >= 0) {
-	// 	return res.json(result.failed().setMsg('该用户名已登录'));
-	// } else {
+	if (userList.indexOf(name) >= 0) {
+		return res.json(result.failed().setMsg('该用户名已登录'));
+	} else {
 		userList.push(name);
 		userCount++;
-		return res.json(result.success());
-	// }
+		return res.json(result.success().setData({userCount: userCount, userList: userList}));
+	}
 });
+
 router.post('/message', function(req, res){
 	var name = req.body.name,
 	    text = req.body.text;
-	this.msgList.push(new Message(name, text));
+	msgList.push(new Message(name, text, msgSeq++));
 	msgCount++;
-	if(this.msgList.length > MAX_MSG_LENGTH){
-		this.msgList.length.splice(0, 30);
-		msgCount = this.msgList.length;
+	if(msgList.length > MAX_MSG_LENGTH){
+		msgList.length.splice(0, 30);
+		msgCount = msgList.length;
 	}
 
 	res.json(new Result().success());
-}):
+});
 
 router.get('/count', function(req, res){
-	res.json(new Result().success().setData(msgCount));
+	var result = new Result()
+	return res.json(result.success().setData({msgSeq: msgSeq, userCount: userCount}));
 });
+
+router.get('/messages', function(req, res){
+	var messages = [];
+	if(req.query.seq){
+		messages = msgList.filter(function(v){ return v.seq >= req.query.seq });
+	}
+	return res.json(new Result().success().setData({ messages: messages, msgSeq: msgSeq }));
+})
+
+router.get('/users', function(req, res){
+	return res.json(new Result().success().setData({ userList: userList }));
+})
 
 router.post('/logout', function(req, res){
 	var name = req.body.name,
