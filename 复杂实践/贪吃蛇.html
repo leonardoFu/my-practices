@@ -404,6 +404,7 @@
 		var Snake = function(){
 			this.bodyList = [];
 			this.direction = DIRECTION.right;
+
 		}
 
 		Snake.prototype = {
@@ -474,7 +475,7 @@
 		var Game = function(){
 			var snake,
 			 foodList,
-			 		timer,
+			 	timer,
 			recorder = { 
 				scoreEl: DOMUtils.getById('score'), 
 				highestScoreEl: DOMUtils.getById('highest-score') 
@@ -488,8 +489,8 @@
 				get: function(){
 					return Number.parseInt(recorder.scoreEl.innerText.split('：')[1]);
 				},
-  			enumerable: true,
-  			configurable: true
+	  			enumerable: true,
+	  			configurable: true
 			})
 
 			Object.defineProperty(recorder, 'highestScore', {
@@ -672,34 +673,33 @@
 			}
 
 			this.process = function(){
-					try{
+				try{
 
-							var head = snake.forward();
+						var head = snake.forward();
 
-						}catch(e){
+					} catch(e) {
 
-							this.over();
+						this.over();
+				}
 
-						}
+				if (foodList.checkEaten(head)) {
 
-						if (foodList.checkEaten(head)) {
+					var eatenFood = foodList.eaten(head);
+					recorder.score = recorder.score || 0;
+					recorder.score += eatenFood.score;
 
-							var eatenFood = foodList.eaten(head);
-							recorder.score = recorder.score || 0;
-							recorder.score += eatenFood.score;
+					if(eatenFood.score === 7){
+						MAX_FOOD ++;
+					}
+				} else if(this.checkOver()) {
 
-							if(eatenFood.score === 7){
-								MAX_FOOD ++;
-							}
-						} else if(this.checkOver()) {
+					this.over();
 
-							this.over();
+				} else {
 
-						} else {
+					snake.removeTail();
 
-							snake.removeTail();
-
-						}
+				}
 			}
 
 			this.pause = function(){
@@ -712,7 +712,7 @@
 
 		return new Game();
 		
-	}()
+	}();
 		
 	window.onload = function(){
 
