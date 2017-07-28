@@ -93,8 +93,24 @@ function merge(left, right){
 	return result.concat(left, right);
 }
 
+/**
+ * 归并排序（递归版本）
+ * 问题：可能会引起浏览器的栈溢出，可以用迭代避免栈溢出问题
+ * @param  {[type]} arr [description]
+ * @return {[type]}     [description]
+ */
+function mergeSort(arr){
+	if(arr.length === 1){
+		return arr;
+	}
+	let mid = ~~(arr.length)
+		, left = arr.slice(0, mid)
+		, right = arr.slice(mid, arr.length);
+
+		return merge(mergeSort(left), mergeSort(right));
+}
  /**
-  * 归并排序
+  * 归并排序（迭代版本）
   * 采用分治法，将数组拆分为小的段，再比较合并
   * @param  {Array} arr 需要排序的数组
   * @return {[type]}
@@ -107,7 +123,8 @@ function mergeSort(arr){
 		work.push(v);
 	})
 	lim = len;
-	work.push([])
+	
+	work.push([])；
 	while(lim > 1){
 		for(i = 0, j = 0; j < lim; i++, j = j + 2){
 			work[i] = merge(work[j], work[j+1]);

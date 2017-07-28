@@ -5,7 +5,7 @@ function calcprimeNum(range){
 	}
 	for(var i = 2; i * i <= range; i++){
 		result = result.filter(function(val){
-			return (val % i !== 0 || val === i)  && val !== 1;
+			return (val % i !== 0 || val === i) && val !== 1;
 		})
 	}
 	return result;
