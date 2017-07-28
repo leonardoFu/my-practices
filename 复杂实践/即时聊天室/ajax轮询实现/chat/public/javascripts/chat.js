@@ -65,6 +65,8 @@ var chat = {
 		})
 
 		$(_this.elements.messages).append($(fragment));
+
+		_this.elements.messages.scrollTop = _this.elements.messages.scrollHeight;
 	},
 	appendLog: function(text){
 		var log = $('<li class="log" style="display: list-item;">'+text+'</li>');
@@ -118,7 +120,7 @@ var chat = {
 									_this.appendLog(leaveUserList+'离开了群聊');
 									_this.userList = userList;
 								}
-								
+
 								_this.appendLog('当前有'+userCount+'人在线');
 								_this.userCount = userCount;
 							}
