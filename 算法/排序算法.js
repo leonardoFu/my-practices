@@ -22,21 +22,47 @@ function quickSort(arr){
 
 	return [...quickSort(left),pivot,...quickSort(right)];
 }
+
+function getMiddle(arr, lo, hi) {
+	let temp = arr[lo];
+
+	while(hi > lo) {
+		while(arr[hi] >= temp && hi > lo) {
+			hi--;
+		}
+		arr[lo] = arr[hi];
+		while(arr[lo] <= temp && hi > lo) {
+			lo++;
+		}
+		arr[hi] = arr[lo];
+	}
+	arr[lo] = temp;
+	return lo;
+}
+function quickSort2(arr, lo, hi) {
+	if(hi < lo) {
+		return;
+	}
+	let mid = getMiddle(arr, lo, hi) ;
+	quickSort2(arr, lo, mid);
+	quickSort2(arr, mid, hi);
+}
+console.log(quickSort2([2, 3, 2, 1, 3, 2, 3, 5, 4, 3, 4, 2, 2, 3, 4, 2, 3, 1, 4, 2], 0, 20))
 /**
  * 冒泡排序
  */
 function bubbleSort(arr){
-	if(!arr||arr.length<1){
+	if(!arr || arr.length<1){
 		return ;
 	}
 
-	for(let j = arr.length-1;j>0;j--){
-		for(let i = 0;i<j;i++){
-			if(arr[i]>arr[i+1]){
+	for(let j = arr.length - 1; j > 0; j--){
+		for(let i = 0; i < j; i++){
+			if(arr[i] > arr[i + 1]){
 				let temp ;
 				temp = arr[i];
-				arr[i] = arr[i+1];
-				arr[i+1] = temp;
+				arr[i] = arr[i + 1];
+				arr[i + 1] = temp;
 			}
 		}
 	}
@@ -123,7 +149,7 @@ function mergeSort(arr){
 		work.push(v);
 	})
 	lim = len;
-	
+
 	work.push([])；
 	while(lim > 1){
 		for(i = 0, j = 0; j < lim; i++, j = j + 2){
