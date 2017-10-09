@@ -3,23 +3,40 @@ function Stack () {
   this.top = 0;
 }
 
-this.prototype.push = function (el) {
+Stack.prototype.push = function (el) {
   this.stackStore[this.top++] = el;
 }
 
-this.prototype.pop = function () {
+Stack.prototype.pop = function () {
   return this.stackStore[--this.top];
 }
 
-this.prototype.peek = function () {
+Stack.prototype.peek = function () {
   return this.stackStore[this.top - 1];
 }
 
-this.prototype.clear = function () {
+Stack.prototype.clear = function () {
   this.stackStore = [];
   this.top = 0;
 }
 
-this.prototype.length = function () {
+Stack.prototype.length = function () {
   return this.top;
 }
+
+//栈的应用
+
+function convertBase(num, base) {
+  var numStack = new Stack();
+  do{
+    numStack.push(num % base);
+    num = ~~(num / base);
+  }while(num > 0);
+
+  let converted = '';
+  while(numStack.length()) {
+    converted += numStack.pop();
+  }
+  return converted;
+}
+convertBase(20, 2);

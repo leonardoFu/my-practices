@@ -39,6 +39,9 @@ function getMiddle(arr, lo, hi) {
 	arr[lo] = temp;
 	return lo;
 }
+/**
+ * 通过位置交换实现快速排序
+ */
 function quickSort2(arr, lo, hi) {
 	if(hi < lo) {
 		return;
@@ -164,8 +167,48 @@ function mergeSort(arr){
 console.log(mergeSort([23,0,32,45,56,75,43,0,34]))
 
 
+function insertSort(arr) {
+	if(!arr || !arr.length) {
+		return;
+	}
+	var len = arr.length;
+	for(var i = 0; i < len; i++) {
+		for(var j = i; j > 0; j--) {
+			if(arr[j] < arr[j - 1]) {
+				var temp = arr[j];
+				arr[j] = arr[i];
+				arr[i] = temp;
+			}
+		}
+	}
+}
 
+function binaryInsertSort(arr) {
+	if(!arr || !arr.length) {
+		return;
+	}
+	var len = arr.length;
+	for(var i = 0; i < len; i++) {
+		var mid = BS4InsertSort(arr, 0, i, arr[i]);
+		var temp = arr[i];
+		for(var j = i; j > mid; j--) {
+			arr[j] = arr[j - 1];
+		}
+		arr[mid] = temp;
+	}
+}
 
+function BS4InsertSort(arr, low, high, target) {
+	while(high > low) {
+		var mid = (low + high) / 2;
+		if(target > arr[mid]) {
+			low = mid + 1;
+		} else {
+			high = mid - 1;
+		}
+	}
+	return mid;
+}
 /**
  * 二分法查找
  * @param  {number} obj 需要查询的数值

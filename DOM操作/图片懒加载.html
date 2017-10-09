@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>图片懒加载</title>
+  <style media="screen">
+    body {
+      height: 2000px;
+    }
+  </style>
+</head>
+<body>
+  <script type="text/javascript">
+    window.onload = function() {
+      window.addEventListener('scroll', function() {
+        if(window.scrollY > 500) {
+          console.log('加载');
+        }
+      }, false)
+    }
+  </script>
+</body>
+</html>

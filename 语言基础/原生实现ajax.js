@@ -24,7 +24,7 @@ var ajax = function(opt){
     if (xhr.readyState == 4) {
       if(xhr.status == 200){
         opt.success(xhr.response)
-      }else{ 
+      }else{
         opt.error()
       }
     }
@@ -54,4 +54,25 @@ function convertData(obj){
     return resultStr;
   }
   return obj;
+}
+
+
+
+
+
+function ajax (options) {
+	options = options || {};
+	options.url = options.url || '';
+	options.method = options.method || 'GET';
+	option.async = option.async === false ? false : true;
+	options.onSuccess = options.onSuccess || function(){};
+	options.onError = options.onError || function(){};
+	options.data = options.data || null;
+	options.contentType = options.contentType
+	|| options.method === 'GET'
+			? 'application/json'
+			: 'application/x-www-form-urlencoded';
+
+	var xhr = getXHRObj();
+
 }
